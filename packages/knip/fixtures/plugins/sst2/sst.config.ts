@@ -9,6 +9,8 @@ export default $config({
     };
   },
   async run() {
+    await import('./infra/api');
+
     const api = new sst.aws.ApiGatewayV2('MyApi', {
       domain: {
         name: 'api.ion.sst.sh',
@@ -28,6 +30,12 @@ export default $config({
       },
     });
     api.route('$default', 'fallback.handler');
+
+    const queue = new sst.aws.Queue('MyQueue');
+    queue.subscribe('subscriber.handler', { batch: { size: 5 } });
+
+    const topic = new sst.aws.SnsTopic('MyTopic');
+    topic.subscribe('billing.events', 'listener.handler');
 
     return {
       api: api.url,
