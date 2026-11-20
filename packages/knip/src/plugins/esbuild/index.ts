@@ -1,3 +1,4 @@
+import type { Args } from '../../types/args.ts';
 import type { IsPluginEnabled, Plugin, ResolveFromAST } from '../../types/config.ts';
 import { collectPropertyValues } from '../../typescript/ast-helpers.ts';
 import { toEntry } from '../../util/input.ts';
@@ -19,12 +20,18 @@ const resolveFromAST: ResolveFromAST = (program, { configFileDir }) =>
     toEntry(join(configFileDir, id), { production: true })
   );
 
+const args: Args = {
+  boolean: true,
+  positional: parsed => parsed._,
+};
+
 const plugin: Plugin = {
   title,
   enablers,
   isEnabled,
   config,
   resolveFromAST,
+  args,
 };
 
 export default plugin;
