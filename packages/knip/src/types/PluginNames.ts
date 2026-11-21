@@ -31,11 +31,14 @@ export type PluginName =
   | 'docusaurus'
   | 'dotenv'
   | 'drizzle'
+  | 'electron-builder'
   | 'electron-forge'
   | 'electron-vite'
   | 'eleventy'
   | 'ember'
   | 'ember-template-lint'
+  | 'env'
+  | 'env-cmd'
   | 'esbuild'
   | 'eslint'
   | 'evalite'
@@ -46,6 +49,7 @@ export type PluginName =
   | 'expressive-code'
   | 'fast'
   | 'filesystem-routing'
+  | 'firebase'
   | 'flue'
   | 'fumadocs'
   | 'gatsby'
@@ -71,6 +75,7 @@ export type PluginName =
   | 'lockfile-lint'
   | 'lost-pixel'
   | 'lunaria'
+  | 'maestro'
   | 'markdownlint'
   | 'marko'
   | 'mastra'
@@ -151,6 +156,7 @@ export type PluginName =
   | 'solidjs-vite-plugin'
   | 'sst'
   | 'starlight'
+  | 'start-server-and-test'
   | 'stencil'
   | 'storybook'
   | 'stryker'
@@ -169,7 +175,9 @@ export type PluginName =
   | 'temporal'
   | 'textlint'
   | 'travis'
+  | 'trigger-dev'
   | 'ts-node'
+  | 'ts-node-dev'
   | 'tsd'
   | 'tsdown'
   | 'tsrs'
@@ -243,11 +251,14 @@ export const pluginNames = [
   'docusaurus',
   'dotenv',
   'drizzle',
+  'electron-builder',
   'electron-forge',
   'electron-vite',
   'eleventy',
   'ember',
   'ember-template-lint',
+  'env',
+  'env-cmd',
   'esbuild',
   'eslint',
   'evalite',
@@ -258,6 +269,7 @@ export const pluginNames = [
   'expressive-code',
   'fast',
   'filesystem-routing',
+  'firebase',
   'flue',
   'fumadocs',
   'gatsby',
@@ -283,6 +295,7 @@ export const pluginNames = [
   'lockfile-lint',
   'lost-pixel',
   'lunaria',
+  'maestro',
   'markdownlint',
   'marko',
   'mastra',
@@ -363,6 +376,7 @@ export const pluginNames = [
   'solidjs-vite-plugin',
   'sst',
   'starlight',
+  'start-server-and-test',
   'stencil',
   'storybook',
   'stryker',
@@ -381,7 +395,9 @@ export const pluginNames = [
   'temporal',
   'textlint',
   'travis',
+  'trigger-dev',
   'ts-node',
+  'ts-node-dev',
   'tsd',
   'tsdown',
   'tsrs',

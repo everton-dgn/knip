@@ -9,16 +9,19 @@ import type {
 import { IMPORT_FLAGS, IMPORT_STAR, OPAQUE } from '../../constants.ts';
 import { addValue } from '../../util/module-graph.ts';
 import { isInNodeModules } from '../../util/path.ts';
+import { unwrapExpression } from '../ast-helpers.ts';
 import { getStringValue, isStringLiteral } from '../ast-nodes.ts';
 import { isShadowedIn } from './shadow.ts';
 import type { WalkState } from './walk.ts';
 
-export function markDynamicNamespaceOpaque(name: string, pos: number, s: WalkState) {
+export function markNamespaceRef(name: string, pos: number, s: WalkState, isStaticIncluded = false) {
   const _import = s.localImportMap.get(name);
-  if (!_import?.isDynamicImport || !_import.isNamespace) return;
+  if (!_import?.isNamespace || !(_import.isDynamicImport || isStaticIncluded)) return;
   if (isShadowedIn(s, name, pos)) return;
   const internalImport = s.internal.get(_import.filePath);
-  if (internalImport) addValue(internalImport.import, OPAQUE, s.filePath);
+  if (!internalImport) return;
+  if (_import.isDynamicImport) addValue(internalImport.import, OPAQUE, s.filePath);
+  else internalImport.refs.add(name);
 }
 
 const getBlockScope = (s: WalkState): [number, number] | undefined => {
@@ -76,14 +79,15 @@ export function handleVariableDeclarator(node: VariableDeclarator, isVar: boolea
     return;
   }
 
+  const requireInit = unwrapExpression(init);
   if (
-    init.type === 'CallExpression' &&
-    init.callee.type === 'Identifier' &&
-    init.callee.name === 'require' &&
-    init.arguments.length === 1 &&
-    isStringLiteral(init.arguments[0])
+    requireInit.type === 'CallExpression' &&
+    requireInit.callee.type === 'Identifier' &&
+    requireInit.callee.name === 'require' &&
+    requireInit.arguments.length === 1 &&
+    isStringLiteral(requireInit.arguments[0])
   ) {
-    const specifier = getStringValue(init.arguments[0])!;
+    const specifier = getStringValue(requireInit.arguments[0])!;
     const reqTags = s.currentVarDeclStart >= 0 ? s.getJSDocTags(s.currentVarDeclStart) : undefined;
     if (node.id.type === 'ObjectPattern') {
       for (const prop of node.id.properties) {
@@ -125,7 +129,7 @@ export function handleVariableDeclarator(node: VariableDeclarator, isVar: boolea
         'default',
         node.id.name,
         undefined,
-        init.arguments[0].start,
+        requireInit.arguments[0].start,
         IMPORT_FLAGS.NONE,
         undefined,
         reqTags
@@ -136,7 +140,7 @@ export function handleVariableDeclarator(node: VariableDeclarator, isVar: boolea
         undefined,
         undefined,
         undefined,
-        init.arguments[0].start,
+        requireInit.arguments[0].start,
         IMPORT_FLAGS.SIDE_EFFECTS,
         undefined,
         reqTags
@@ -153,37 +157,13 @@ export function handleVariableDeclarator(node: VariableDeclarator, isVar: boolea
       if (imp?.type === 'SpreadElement') break;
       const binding = bindings[i];
       if (imp?.type === 'ImportExpression' && isStringLiteral(imp.source)) {
-        s.handledImportExpressions.add(imp.start);
-        const specifier = getStringValue(imp.source)!;
         const caughtFlag = s.caughtTryBlockEnds.length > 0 ? IMPORT_FLAGS.CAUGHT : IMPORT_FLAGS.NONE;
-        if (binding?.type === 'ObjectPattern') {
-          for (const prop of binding.properties) {
-            if (prop.type === 'Property') {
-              const importedName =
-                prop.key?.type === 'Identifier'
-                  ? prop.key.name
-                  : prop.key?.type === 'Literal' && typeof prop.key.value === 'string'
-                    ? prop.key.value
-                    : undefined;
-              s.addImport(specifier, importedName, undefined, undefined, prop.key?.start ?? prop.start, caughtFlag);
-            }
-          }
-        } else if (binding?.type === 'Identifier') {
-          s.addImport(
-            specifier,
-            'default',
-            binding.name,
-            undefined,
-            imp.source.start,
-            IMPORT_FLAGS.DYNAMIC | caughtFlag
-          );
-          const resolved = s.resolveModule(specifier, s.filePath);
-          if (resolved && !resolved.isExternalLibraryImport && !isInNodeModules(resolved.resolvedFileName)) {
-            setDynamicNamespace(binding.name, resolved.resolvedFileName, getBlockScope(s), isVar, s);
-          }
+        if (binding?.type === 'ObjectPattern' || binding?.type === 'Identifier') {
+          handleDynamicImportBinding(binding, imp, true, caughtFlag, getBlockScope(s), isVar, s);
         } else {
+          s.handledImportExpressions.add(imp.start);
           s.addImport(
-            specifier,
+            getStringValue(imp.source)!,
             undefined,
             undefined,
             undefined,
@@ -361,6 +341,10 @@ function handleDynamicImportBinding(
           prop.start,
           IMPORT_FLAGS.DYNAMIC | caughtFlag
         );
+        const resolved = s.resolveModule(specifier, s.filePath);
+        if (resolved && !resolved.isExternalLibraryImport && !isInNodeModules(resolved.resolvedFileName)) {
+          setDynamicNamespace(prop.argument.name, resolved.resolvedFileName, scope, isVar, s);
+        }
       }
     }
   } else if (id.type === 'Identifier') {
