@@ -1,6 +1,6 @@
 import { Visitor } from 'oxc-parser';
 import type { ResolveFromAST } from '../../types/config.ts';
-import { collectPropertyValues, getImportMap } from '../../typescript/ast-helpers.ts';
+import { collectPropertyValues, findProperty, getImportMap } from '../../typescript/ast-helpers.ts';
 import { _parseFile } from '../../typescript/ast-nodes.ts';
 import { toEntryPath } from '../../util/input.ts';
 import { dirname } from '../../util/path.ts';
@@ -15,38 +15,57 @@ export const resolveFromAST: ResolveFromAST = (program, options) => {
     for (const specifier of values) addHandler(specifier);
   };
 
+  const parseImport = (specifier: string) => {
+    const filePath = _resolveSync(specifier, dirname(options.configFilePath));
+    const text = filePath ? options.readFile(filePath) : undefined;
+    return filePath && text ? _parseFile(filePath, text).program : undefined;
+  };
+
   try {
     const importMap = getImportMap(program);
+    const dynamicImports: string[] = [];
 
     addHandlers(collectPropertyValues(program, 'handler'));
 
     const visitor = new Visitor({
+      ImportExpression(node) {
+        const source = node.source;
+        if (source.type === 'Literal' && typeof source.value === 'string' && source.value.startsWith('.'))
+          dynamicImports.push(source.value);
+      },
       CallExpression(node) {
         if (node.callee?.type !== 'MemberExpression') return;
         const propName = !node.callee.computed ? node.callee.property?.name : undefined;
         if (propName === 'stack') {
           const arg = node.arguments?.[0];
-          if (arg?.type === 'Identifier') {
-            const importPath = importMap.get(arg.name);
-            if (importPath) {
-              const resolvedPath = _resolveSync(importPath, dirname(options.configFilePath));
-              if (resolvedPath) {
-                const stackText = options.readFile(resolvedPath);
-                if (stackText) {
-                  const stackResult = _parseFile('stack.ts', stackText);
-                  addHandlers(collectPropertyValues(stackResult.program, 'handler'));
-                }
-              }
-            }
-          }
+          const importPath = arg?.type === 'Identifier' ? importMap.get(arg.name) : undefined;
+          const stack = importPath ? parseImport(importPath) : undefined;
+          if (stack) addHandlers(collectPropertyValues(stack, 'handler'));
         }
         if (propName === 'route' && node.arguments?.length >= 2) {
           const handlerArg = node.arguments[1];
           if (handlerArg?.type === 'Literal' && typeof handlerArg.value === 'string') addHandler(handlerArg.value);
         }
+        if (propName === 'subscribe') {
+          const [first, second] = node.arguments;
+          const subscriber =
+            second?.type === 'Literal'
+              ? second
+              : !second || (second.type === 'ObjectExpression' && !findProperty(second, 'handler'))
+                ? first
+                : undefined;
+          if (subscriber?.type === 'Literal' && typeof subscriber.value === 'string' && subscriber.value.includes('.'))
+            addHandler(subscriber.value);
+        }
       },
     });
     visitor.visit(program);
+
+    for (const infra of dynamicImports.map(parseImport)) {
+      if (!infra) continue;
+      addHandlers(collectPropertyValues(infra, 'handler'));
+      visitor.visit(infra);
+    }
   } catch {}
 
   return Array.from(entries).map(specifier => toEntryPath(specifier, { production: true }));
