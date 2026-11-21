@@ -37,6 +37,7 @@ export type PluginName =
   | 'eleventy'
   | 'ember'
   | 'ember-template-lint'
+  | 'env'
   | 'env-cmd'
   | 'esbuild'
   | 'eslint'
@@ -199,6 +200,7 @@ export type PluginName =
   | 'vercel-og'
   | 'vike'
   | 'vite'
+  | 'vite-node'
   | 'vite-plugin-pages'
   | 'vite-plugin-pwa'
   | 'vite-plugin-vue-layouts-next'
@@ -256,6 +258,7 @@ export const pluginNames = [
   'eleventy',
   'ember',
   'ember-template-lint',
+  'env',
   'env-cmd',
   'esbuild',
   'eslint',
@@ -418,6 +421,7 @@ export const pluginNames = [
   'vercel-og',
   'vike',
   'vite',
+  'vite-node',
   'vite-plugin-pages',
   'vite-plugin-pwa',
   'vite-plugin-vue-layouts-next',

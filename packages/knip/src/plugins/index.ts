@@ -36,6 +36,7 @@ import { default as electronVite } from './electron-vite/index.ts';
 import { default as eleventy } from './eleventy/index.ts';
 import { default as ember } from './ember/index.ts';
 import { default as emberTemplateLint } from './ember-template-lint/index.ts';
+import { default as env } from './env/index.ts';
 import { default as envCmd } from './env-cmd/index.ts';
 import { default as esbuild } from './esbuild/index.ts';
 import { default as eslint } from './eslint/index.ts';
@@ -198,6 +199,7 @@ import { default as vercel } from './vercel/index.ts';
 import { default as vercelOg } from './vercel-og/index.ts';
 import { default as vike } from './vike/index.ts';
 import { default as vite } from './vite/index.ts';
+import { default as viteNode } from './vite-node/index.ts';
 import { default as vitePluginPages } from './vite-plugin-pages/index.ts';
 import { default as vitePluginPwa } from './vite-plugin-pwa/index.ts';
 import { default as vitePluginVueLayoutsNext } from './vite-plugin-vue-layouts-next/index.ts';
@@ -255,6 +257,7 @@ export const Plugins = {
   eleventy,
   ember,
   'ember-template-lint': emberTemplateLint,
+  env,
   'env-cmd': envCmd,
   esbuild,
   eslint,
@@ -417,6 +420,7 @@ export const Plugins = {
   'vercel-og': vercelOg,
   vike,
   vite,
+  'vite-node': viteNode,
   'vite-plugin-pages': vitePluginPages,
   'vite-plugin-pwa': vitePluginPwa,
   'vite-plugin-vue-layouts-next': vitePluginVueLayoutsNext,

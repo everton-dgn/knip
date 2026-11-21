@@ -587,6 +587,10 @@
           "title": "ember-template-lint plugin configuration (https://knip.dev/reference/plugins/ember-template-lint)",
           "$ref": "#/definitions/plugin"
         },
+        "env": {
+          "title": "env plugin configuration (https://knip.dev/reference/plugins/env)",
+          "$ref": "#/definitions/plugin"
+        },
         "env-cmd": {
           "title": "env-cmd plugin configuration (https://knip.dev/reference/plugins/env-cmd)",
           "$ref": "#/definitions/plugin"
@@ -1221,6 +1225,10 @@
         },
         "vite": {
           "title": "vite plugin configuration (https://knip.dev/reference/plugins/vite)",
+          "$ref": "#/definitions/plugin"
+        },
+        "vite-node": {
+          "title": "vite-node plugin configuration (https://knip.dev/reference/plugins/vite-node)",
           "$ref": "#/definitions/plugin"
         },
         "vite-plugin-pages": {
